@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noch X Tage bis zur Karenz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;700;900&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F1EA;
+    --ink: #111111;
+    --accent: #FF4D2E;
+    --lilac: #B8A4FF;
+    --lemon: #FFE45E;
+    --sky: #9FD8FF;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 5vw 50px;
+    position: relative;
+  }
+
+  /* Grainy texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    z-index: 1;
+  }
+
+  /* Floating stickers */
+  .sticker {
+    position: fixed;
+    z-index: 2;
+    pointer-events: none;
+    animation: float 6s ease-in-out infinite;
+  }
+  .sticker.s1 { top: 12%; left: 6%; animation-delay: 0s; }
+  .sticker.s2 { top: 18%; right: 8%; animation-delay: 1.5s; }
+  .sticker.s3 { bottom: 22%; left: 7%; animation-delay: 0.8s; }
+  .sticker.s4 { bottom: 14%; right: 10%; animation-delay: 2.2s; }
+  .sticker.s5 { top: 50%; left: 3%; animation-delay: 1s; }
+  .sticker.s6 { top: 38%; right: 4%; animation-delay: 2.8s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-22px) rotate(calc(var(--r, 0deg) + 6deg)); }
+  }
+
+  /* Marquee top */
+  .marquee {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 0;
+    z-index: 10;
+  }
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+    animation: scroll 28s linear infinite;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .marquee-track span {
+    padding-right: 40px;
+  }
+  .marquee-track span::after {
+    content: "✦";
+    margin-left: 40px;
+    color: var(--accent);
+  }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* Main stage */
+  .stage {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  .portrait {
+    width: 145px;
+    height: 158px;
+    margin-bottom: 4px;
+    animation: wobble 4s ease-in-out infinite;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(3deg); }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    background: white;
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1.5px solid var(--ink);
+    margin: 14px 0 18px;
+    transform: rotate(-2deg);
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+  }
+
+  .word-noch {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(36px, 4.5vw, 60px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Mega number */
+  .number-wrap {
+    position: relative;
+    display: inline-block;
+    margin: 4px 0 4px;
+    padding: 0 40px;
+  }
+  .number {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(140px, 22vh, 240px);
+    line-height: 0.85;
+    color: var(--accent);
+    display: inline-block;
+    animation: tilt 3.5s ease-in-out infinite;
+    position: relative;
+    z-index: 2;
+    text-shadow: 6px 6px 0 var(--ink);
+  }
+  @keyframes tilt {
+    0%, 100% { transform: rotate(-3deg) scale(1); }
+    50% { transform: rotate(4deg) scale(1.04); }
+  }
+
+  .scribble-underline {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    z-index: 1;
+  }
+
+  .spark {
+    position: absolute;
+    z-index: 3;
+    animation: sparkle 2.2s ease-in-out infinite;
+  }
+  .spark.sp1 { top: 5%; left: -10px; animation-delay: 0s; }
+  .spark.sp2 { top: 25%; right: -20px; animation-delay: 0.4s; }
+  .spark.sp3 { bottom: 12%; left: -25px; animation-delay: 0.8s; }
+  .spark.sp4 { bottom: 0; right: 10px; animation-delay: 1.2s; }
+  @keyframes sparkle {
+    0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.4; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  }
+
+  .word-tage {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(36px, 4.5vw, 60px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-top: 6px;
+  }
+  .word-tage em {
+    font-style: italic;
+    background: var(--lemon);
+    padding: 0 8px;
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 var(--ink);
+    display: inline-block;
+    transform: rotate(-2deg);
+  }
+
+  .below {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: clamp(22px, 2.6vw, 32px);
+    color: var(--ink);
+    margin-top: 18px;
+    transform: rotate(-1deg);
+  }
+
+  footer {
+    position: fixed;
+    bottom: 18px;
+    left: 0; right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  footer .right { display: flex; gap: 8px; align-items: center; }
+  footer .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+
+  /* Entry animations */
+  .stage > * {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  .stage > *:nth-child(1) { animation-delay: 0.1s; }
+  .stage > *:nth-child(2) { animation-delay: 0.25s; }
+  .stage > *:nth-child(3) { animation-delay: 0.4s; }
+  .stage > *:nth-child(4) { animation-delay: 0.55s; }
+  .stage > *:nth-child(5) { animation-delay: 0.75s; }
+  .stage > *:nth-child(6) { animation-delay: 0.9s; }
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 700px) {
+    .sticker { transform: scale(0.55); }
+    footer { font-size: 10px; padding: 0 14px; }
+    .portrait { width: 160px; height: 175px; }
+    .number { text-shadow: 4px 4px 0 var(--ink); }
+    .number-wrap { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <span>countdown läuft</span><span>bye office</span><span>karenz incoming</span><span>papa-modus aktiviert</span><span>out of office bald</span><span>bis 1. juli</span>
+    <span>countdown läuft</span><span>bye office</span><span>karenz incoming</span><span>papa-modus aktiviert</span><span>out of office bald</span><span>bis 1. juli</span>
+  </div>
+</div>
+
+<!-- Floating stickers -->
+<svg class="sticker s1" style="--r: -8deg" width="64" height="64" viewBox="0 0 64 64">
+  <path d="M32 8 L36 26 L54 30 L36 34 L32 52 L28 34 L10 30 L28 26 Z" fill="#FFE45E" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>
+
+<svg class="sticker s2" style="--r: 12deg" width="74" height="74" viewBox="0 0 74 74">
+  <circle cx="37" cy="37" r="22" fill="#B8A4FF" stroke="#111" stroke-width="2.5"/>
+  <path d="M28 34 Q37 28 46 34" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="30" cy="38" r="1.8" fill="#111"/>
+  <circle cx="44" cy="38" r="1.8" fill="#111"/>
+  <path d="M30 46 Q37 51 44 46" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>
+
+<svg class="sticker s3" style="--r: -15deg" width="90" height="40" viewBox="0 0 90 40">
+  <path d="M5 22 Q15 6 25 22 T45 22 T65 22 T85 22" stroke="#FF4D2E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+</svg>
+
+<svg class="sticker s4" style="--r: 8deg" width="58" height="58" viewBox="0 0 58 58">
+  <path d="M29 10 C22 10 16 16 16 24 C16 34 29 49 29 49 C29 49 42 34 42 24 C42 16 36 10 29 10 Z" fill="#FF4D2E" stroke="#111" stroke-width="2.5"/>
+</svg>
+
+<svg class="sticker s5" style="--r: 20deg" width="54" height="54" viewBox="0 0 54 54">
+  <circle cx="27" cy="27" r="13" fill="#9FD8FF" stroke="#111" stroke-width="2.5"/>
+  <g stroke="#111" stroke-width="2.5" stroke-linecap="round">
+    <line x1="27" y1="3" x2="27" y2="10"/>
+    <line x1="27" y1="44" x2="27" y2="51"/>
+    <line x1="3" y1="27" x2="10" y2="27"/>
+    <line x1="44" y1="27" x2="51" y2="27"/>
+    <line x1="10" y1="10" x2="14" y2="14"/>
+    <line x1="40" y1="40" x2="44" y2="44"/>
+    <line x1="44" y1="10" x2="40" y2="14"/>
+    <line x1="14" y1="40" x2="10" y2="44"/>
+  </g>
+</svg>
+
+<svg class="sticker s6" style="--r: -10deg" width="68" height="58" viewBox="0 0 68 58">
+  <path d="M10 28 Q10 12 28 12 L48 12 Q62 12 62 28 Q62 40 48 40 L30 40 Q22 40 18 48 L19 38 Q10 36 10 28 Z" fill="#FFE45E" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="24" cy="26" r="2" fill="#111"/>
+  <circle cx="34" cy="26" r="2" fill="#111"/>
+  <circle cx="44" cy="26" r="2" fill="#111"/>
+</svg>
+
+<main class="stage">
+
+  <!-- Notion-style scribble portrait (Michi: bald, round glasses, red beard) -->
+  <svg class="portrait" viewBox="0 0 240 260" fill="none">
+    <!-- Speech bubble -->
+    <ellipse cx="200" cy="42" rx="32" ry="20" fill="#FFE45E" stroke="#111" stroke-width="2.5"/>
+    <path d="M183 56 L175 70 L189 60 Z" fill="#FFE45E" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+    <text x="200" y="49" text-anchor="middle" font-family="Caveat, cursive" font-size="22" font-weight="700" fill="#111">bald!</text>
+
+    <!-- T-Shirt / shoulders -->
+    <path d="M50 240 Q60 215 95 205 L145 205 Q180 215 190 240 L190 260 L50 260 Z" fill="#1a1a1a" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- Bag strap -->
+    <path d="M75 205 Q105 230 145 260" stroke="#111" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Neck -->
+    <path d="M100 185 Q100 200 95 210" stroke="#111" stroke-width="3" fill="#F5F1EA" stroke-linecap="round"/>
+    <path d="M140 185 Q140 200 145 210" stroke="#111" stroke-width="3" fill="#F5F1EA" stroke-linecap="round"/>
+    <path d="M95 210 Q120 218 145 210" stroke="#111" stroke-width="3" fill="#F5F1EA" stroke-linecap="round"/>
+
+    <!-- Head shape (bald, slightly egg-shaped, rounded top) -->
+    <path d="M70 105 Q65 70 95 55 Q120 45 145 55 Q175 70 170 105 Q172 135 162 160 Q150 185 120 188 Q90 185 78 160 Q68 135 70 105 Z" stroke="#111" stroke-width="3" fill="#F5F1EA" stroke-linejoin="round"/>
+
+    <!-- Stubble dots on scalp (3-day buzz vibe) -->
+    <circle cx="95" cy="72" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="110" cy="65" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="128" cy="64" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="145" cy="70" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="85" cy="85" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="155" cy="85" r="1" fill="#111" opacity="0.4"/>
+    <circle cx="120" cy="58" r="1" fill="#111" opacity="0.4"/>
+
+    <!-- Ears -->
+    <path d="M70 115 Q58 115 58 132 Q58 144 72 140" stroke="#111" stroke-width="3" fill="#F5F1EA"/>
+    <path d="M170 115 Q182 115 182 132 Q182 144 168 140" stroke="#111" stroke-width="3" fill="#F5F1EA"/>
+
+    <!-- Eyebrows (red-ish) -->
+    <path d="M82 108 Q95 104 108 110" stroke="#B8420F" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M132 110 Q145 104 158 108" stroke="#B8420F" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- Round glasses (wire frames) -->
+    <circle cx="95" cy="125" r="16" stroke="#111" stroke-width="2.5" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="145" cy="125" r="16" stroke="#111" stroke-width="2.5" fill="rgba(255,255,255,0.3)"/>
+    <path d="M111 125 L129 125" stroke="#111" stroke-width="2.5"/>
+    <path d="M79 122 L70 119" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M161 122 L170 119" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Eyes (smiling, slight curve) -->
+    <path d="M90 126 Q95 122 100 126" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M140 126 Q145 122 150 126" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Nose -->
+    <path d="M118 138 Q115 152 122 155" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+    <!-- Upper lip stubble (denser than rest) -->
+    <g fill="#C8501C" opacity="0.85">
+      <circle cx="102" cy="162" r="0.9"/>
+      <circle cx="106" cy="161" r="0.9"/>
+      <circle cx="110" cy="161" r="0.9"/>
+      <circle cx="114" cy="161" r="0.9"/>
+      <circle cx="118" cy="161" r="0.9"/>
+      <circle cx="122" cy="161" r="0.9"/>
+      <circle cx="126" cy="161" r="0.9"/>
+      <circle cx="130" cy="161" r="0.9"/>
+      <circle cx="134" cy="161" r="0.9"/>
+      <circle cx="138" cy="162" r="0.9"/>
+      <circle cx="104" cy="165" r="0.9"/>
+      <circle cx="108" cy="165" r="0.9"/>
+      <circle cx="112" cy="165" r="0.9"/>
+      <circle cx="116" cy="165" r="0.9"/>
+      <circle cx="124" cy="165" r="0.9"/>
+      <circle cx="128" cy="165" r="0.9"/>
+      <circle cx="132" cy="165" r="0.9"/>
+      <circle cx="136" cy="165" r="0.9"/>
+      <circle cx="106" cy="168" r="0.7"/>
+      <circle cx="110" cy="168" r="0.7"/>
+      <circle cx="114" cy="168" r="0.7"/>
+      <circle cx="126" cy="168" r="0.7"/>
+      <circle cx="130" cy="168" r="0.7"/>
+      <circle cx="134" cy="168" r="0.7"/>
+    </g>
+
+    <!-- Light beard along jawline (short, sparse) -->
+    <path d="M85 160 Q82 175 92 188 Q105 196 120 197 Q135 196 148 188 Q158 175 155 160" stroke="#C8501C" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- Soul patch under lip -->
+    <g fill="#C8501C" opacity="0.7">
+      <circle cx="117" cy="180" r="0.8"/>
+      <circle cx="120" cy="181" r="0.8"/>
+      <circle cx="123" cy="180" r="0.8"/>
+      <circle cx="118" cy="183" r="0.7"/>
+      <circle cx="122" cy="183" r="0.7"/>
+    </g>
+
+    <!-- Stubble dots along jaw -->
+    <g fill="#C8501C" opacity="0.7">
+      <circle cx="88" cy="168" r="0.9"/>
+      <circle cx="90" cy="175" r="0.9"/>
+      <circle cx="93" cy="182" r="0.9"/>
+      <circle cx="98" cy="187" r="0.9"/>
+      <circle cx="104" cy="191" r="0.9"/>
+      <circle cx="111" cy="193" r="0.9"/>
+      <circle cx="118" cy="194" r="0.9"/>
+      <circle cx="125" cy="193" r="0.9"/>
+      <circle cx="132" cy="191" r="0.9"/>
+      <circle cx="138" cy="187" r="0.9"/>
+      <circle cx="143" cy="182" r="0.9"/>
+      <circle cx="146" cy="175" r="0.9"/>
+      <circle cx="148" cy="168" r="0.9"/>
+      <circle cx="95" cy="172" r="0.7"/>
+      <circle cx="100" cy="178" r="0.7"/>
+      <circle cx="108" cy="184" r="0.7"/>
+      <circle cx="128" cy="184" r="0.7"/>
+      <circle cx="136" cy="178" r="0.7"/>
+      <circle cx="141" cy="172" r="0.7"/>
+    </g>
+
+    <!-- Smile -->
+    <path d="M105 174 Q120 180 135 174" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- Cheek blush -->
+    <ellipse cx="78" cy="148" rx="6" ry="4" fill="#FF4D2E" opacity="0.35"/>
+    <ellipse cx="162" cy="148" rx="6" ry="4" fill="#FF4D2E" opacity="0.35"/>
+
+    <!-- Sparkle next to head -->
+    <path d="M25 105 L28 115 L38 118 L28 121 L25 131 L22 121 L12 118 L22 115 Z" fill="#B8A4FF" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="eyebrow">
+    <span class="dot"></span>
+    <span>status: countdown läuft</span>
+  </div>
+
+  <div class="word-noch">Noch</div>
+
+  <div class="number-wrap">
+    <span class="spark sp1">
+      <svg width="38" height="38" viewBox="0 0 38 38"><path d="M19 2 L22 16 L36 19 L22 22 L19 36 L16 22 L2 19 L16 16 Z" fill="#111" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="spark sp2">
+      <svg width="30" height="30" viewBox="0 0 30 30"><path d="M15 2 L17 13 L28 15 L17 17 L15 28 L13 17 L2 15 L13 13 Z" fill="#B8A4FF" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="spark sp3">
+      <svg width="34" height="34" viewBox="0 0 34 34"><path d="M17 2 L19 15 L32 17 L19 19 L17 32 L15 19 L2 17 L15 15 Z" fill="#9FD8FF" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </span>
+    <span class="spark sp4">
+      <svg width="26" height="26" viewBox="0 0 26 26"><path d="M13 2 L15 11 L24 13 L15 15 L13 24 L11 15 L2 13 L11 11 Z" fill="#FFE45E" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </span>
+
+    <span class="number" id="dayNumber">7</span>
+
+    <svg class="scribble-underline" viewBox="0 0 300 30" preserveAspectRatio="none">
+      <path d="M5 18 Q50 5 100 16 T200 16 T295 18" stroke="#111" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="word-tage">Tage bis zur <em>Karenz.</em></div>
+
+  <div class="below">los geht's am 1. Juli ✦</div>
+
+</main>
+
+<footer>
+  <span>made with ✿ for michi</span>
+  <span class="right"><span class="live-dot"></span> live countdown · click for more confetti</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script>
+  // Live countdown
+  function updateDays() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const karenz = new Date('2026-07-01T00:00:00');
+    const diff = Math.ceil((karenz - today) / (1000 * 60 * 60 * 24));
+    document.getElementById('dayNumber').textContent = Math.max(0, diff);
+  }
+  updateDays();
+
+  // Confetti
+  function fireConfetti() {
+    const colors = ['#FF4D2E', '#B8A4FF', '#FFE45E', '#9FD8FF', '#111111'];
+    confetti({
+      particleCount: 90, angle: 60, spread: 75,
+      origin: { x: 0, y: 0.7 }, colors: colors, scalar: 1.2
+    });
+    confetti({
+      particleCount: 90, angle: 120, spread: 75,
+      origin: { x: 1, y: 0.7 }, colors: colors, scalar: 1.2
+    });
+    setTimeout(() => {
+      confetti({
+        particleCount: 140, spread: 110,
+        origin: { x: 0.5, y: 0.25 }, colors: colors, scalar: 1.4,
+        shapes: ['circle', 'square']
+      });
+    }, 300);
+    setTimeout(() => {
+      confetti({
+        particleCount: 70, angle: 60, spread: 90,
+        origin: { x: 0, y: 0.5 }, colors: colors
+      });
+      confetti({
+        particleCount: 70, angle: 120, spread: 90,
+        origin: { x: 1, y: 0.5 }, colors: colors
+      });
+    }, 800);
+  }
+
+  window.addEventListener('load', () => setTimeout(fireConfetti, 250));
+  document.addEventListener('click', fireConfetti);
+</script>
+
+</body>
+</html>
